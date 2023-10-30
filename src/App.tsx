@@ -1,35 +1,114 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+type ButtonState = "DEFAULT" | "SELECTED" | "WRONG";
+type Option = {
+  value: string;
+  state: ButtonState;
+};
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+function randomize() {
+  return Math.random() - 0.5;
 }
 
-export default App
+function CountryCapitalGame({ data }: { data: Record<string, string> }) {
+  const countries = Object.keys(data);
+  const capitals = Object.values(data);
+  const [options, setOptions] = useState<Option[]>(
+    [...countries, ...capitals].sort(randomize).map((value) => ({
+      value,
+      state: "DEFAULT",
+    }))
+  );
+
+  const [selected, setSelected] = useState<Option>();
+  const isGameOver = options.length === 0;
+
+  if (isGameOver) {
+    return <div>Congratulations</div>;
+  }
+
+  return (
+    <div className="optionsTable">
+      {options.map((option) => (
+        <button
+          className={
+            option.state === "SELECTED"
+              ? "selected"
+              : option.state === "WRONG"
+              ? "wrong"
+              : ""
+          }
+          key={option.value}
+          onClick={() => {
+            if (!selected) {
+              setSelected(option);
+              setOptions(
+                options.map((opt) => {
+                  return opt === option
+                    ? {
+                        ...opt,
+                        state: "SELECTED",
+                      }
+                    : { ...opt, state: "DEFAULT" };
+                })
+              );
+            } else {
+              if (
+                selected.value === data[option.value] ||
+                data[selected.value] === option.value
+              ) {
+                setOptions(
+                  options.filter((opt) => {
+                    return !(
+                      opt.value === selected.value || opt.value === option.value
+                    );
+                  })
+                );
+              } else {
+                setOptions(
+                  options.map((opt) => {
+                    return opt.value === selected.value ||
+                      opt.value === option.value
+                      ? { ...opt, state: "WRONG" }
+                      : opt;
+                  })
+                );
+              }
+              setSelected(undefined);
+            }
+          }}
+        >
+          {option.value}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <>
+      <CountryCapitalGame
+        data={{
+          Germany: "Berlin",
+          Azerbaijan: "Baku",
+          Japan: "Tokyo",
+          Bangladesh: "Dhaka",
+          Romania: "Bucharest",
+          Austria: "Vienna",
+          Afghanistan: "Kabul",
+          Brazil: "Brasilia",
+          Denmark: "Copenhagen",
+          Hungary: "Budapest",
+          Mali: "Bamako",
+          Nigeria: "Abuja",
+          Russia: "Moscow",
+          Switzerland: "Bern",
+        }}
+      />
+    </>
+  );
+}
+
+export default App;
